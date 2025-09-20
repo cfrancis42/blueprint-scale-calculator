@@ -146,13 +146,13 @@
   }
 
   // ---------- PARSING & MATH ----------
-  function parseNumberish(str) {
+    function parseNumberish(str) {
     if (!str) return NaN;
     str = (''+str).trim();
     if (!str) return NaN;
 
-    // Mixed fraction "1 13/16"
-    const mixed = str.match(/^(-?\\d+)\\s+(\\d+)\\/(\\d+)$/);
+    // Mixed fraction: "1 13/16"
+    const mixed = str.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
     if (mixed) {
       const whole = parseFloat(mixed[1]);
       const num = parseFloat(mixed[2]);
@@ -160,14 +160,16 @@
       if (!den) return NaN;
       return whole + (whole < 0 ? -num/den : num/den);
     }
-    // Simple fraction "13/16"
-    const frac = str.match(/^(-?\\d+)\\/(\\d+)$/);
+
+    // Simple fraction: "13/16"
+    const frac = str.match(/^(-?\d+)\/(\d+)$/);
     if (frac) {
       const num = parseFloat(frac[1]);
       const den = parseFloat(frac[2]);
       if (!den) return NaN;
       return num/den;
     }
+
     // Decimal/whole
     const val = parseFloat(str);
     return isNaN(val) ? NaN : val;
