@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Blueprint Scale Calculator</title>
-<meta name="theme-color" content="#0b6bff">
+<meta name="theme-color" content="#0b6bff" />
 <style>
   :root { --pad: 14px; --radius: 12px; }
   * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
@@ -42,7 +42,7 @@
       <div class="grid">
         <div>
           <label>Preset (X″ on plan = Y′ real)</label>
-          <select id="scalePreset" class="premium">
+          <select id="scalePreset">
             <option value="0.125,1">1/8″ = 1′</option>
             <option value="0.1875,1">3/16″ = 1′</option>
             <option value="0.25,1" selected>1/4″ = 1′ (Free)</option>
@@ -95,8 +95,8 @@
         </div>
       </div>
       <div class="btns" style="margin-top:10px;">
-        <button class="primary" onclick="convertPlanToReal()">Convert to Real Size</button>
-        <button class="secondary" onclick="fillExample()">Try 9/16″ at 1/4″ = 1′</button>
+        <button class="primary" id="btnPlanToReal">Convert to Real Size</button>
+        <button class="secondary" id="btnExample">Try 9/16″ at 1/4″ = 1′</button>
       </div>
       <div class="output" id="outPlanToReal" style="margin-top:12px;">Result will appear here…</div>
     </div>
@@ -116,37 +116,28 @@
         </div>
       </div>
       <div class="btns" style="margin-top:10px;">
-        <button class="primary" onclick="convertRealToPlan()">Convert to Plan Size</button>
+        <button class="primary" id="btnRealToPlan">Convert to Plan Size</button>
       </div>
       <div class="output" id="outRealToPlan" style="margin-top:12px;">Result will appear here…</div>
     </div>
 
     <div class="card">
-      <h3>Notes</h3>
-      <ul class="hint">
-        <li>Accepts whole numbers, decimals (<code>2.5</code>), simple fractions (<code>3/8</code>), and mixed fractions (<code>1 13/16</code>).</li>
-        <li>Rounding applies to inches in the formatted output only; decimal values are also shown.</li>
-        <li>Common scales: 1/8″ = 1′, 1/4″ = 1′, 1/2″ = 1′, 1″ = 1′.</li>
-      </ul>
-      <div class="footer">© Your Name</div>
+      <div class="footer">
+        <p><small>© 2025 Your Name — This app is provided as-is and is not actively maintained.</small></p>
+      </div>
     </div>
   </div>
 
 <script>
-  // ---------- PAYMENT LINK (set this to your Stripe Payment Link) ----------
-  const PAYMENT_LINK_URL = "https://buy.stripe.com/your_payment_link"; // TODO: replace
+  // ---------- 1) STRIPE PAYMENT LINK ----------
+  const PAYMENT_LINK_URL = "https://buy.stripe.com/8x26oJd5r9tNgjA9PHejK00"; // <-- PUT YOUR STRIPE PAYMENT LINK HERE
 
-  // ---------- ENTITLEMENT ----------
-  function isEntitled() {
-    try { return !!localStorage.getItem("entitlement"); } catch { return false; }
-  }
+  // ---------- 2) ENTITLEMENT ----------
+  function isEntitled() { try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
+  function setEntitled(token) { try { localStorage.setItem("entitlement", token); } catch {} }
 
-  function setEntitled(token) {
-    try { localStorage.setItem("entitlement", token); } catch {}
-  }
-
-  // ---------- PARSING & MATH ----------
-    function parseNumberish(str) {
+  // ---------- 3) PARSER (fixed regex) ----------
+  function parseNumberish(str) {
     if (!str) return NaN;
     str = (''+str).trim();
     if (!str) return NaN;
@@ -160,7 +151,6 @@
       if (!den) return NaN;
       return whole + (whole < 0 ? -num/den : num/den);
     }
-
     // Simple fraction: "13/16"
     const frac = str.match(/^(-?\d+)\/(\d+)$/);
     if (frac) {
@@ -169,12 +159,12 @@
       if (!den) return NaN;
       return num/den;
     }
-
     // Decimal/whole
     const val = parseFloat(str);
     return isNaN(val) ? NaN : val;
   }
 
+  // ---------- 4) ROUNDING & FORMATTING ----------
   function roundToFractionInches(inches, fracStr) {
     if (!fracStr || fracStr === "1") return Math.round(inches);
     const parts = fracStr.split('/');
@@ -184,7 +174,6 @@
     const step = 1/denom;
     return Math.round(inches/step)*step;
   }
-
   function formatFeetInches(feetDecimal, rounding) {
     if (!isFinite(feetDecimal)) return "—";
     let feet = Math.trunc(feetDecimal);
@@ -205,77 +194,11 @@
     }
     const f = toFraction(inches, rounding);
     let inchStr = "";
-    if (Math.abs(f.num) < 1e-9) {
-      inchStr = `${Math.round(inches)}″`;
-    } else if (f.whole > 0) {
-      inchStr = `${f.whole} ${f.num}/${f.den}″`;
-    } else {
-      inchStr = `${f.num}/${f.den}″`;
-    }
+    if (Math.abs(f.num) < 1e-9) inchStr = `${Math.round(inches)}″`;
+    else if (f.whole > 0) inchStr = `${f.whole} ${f.num}/${f.den}″`;
+    else inchStr = `${f.num}/${f.den}″`;
     return `${feet}′-${inchStr}`;
   }
-
-  function getScaleFactorFeetPerInch() {
-    const XplanInches = parseNumberish(document.getElementById('scaleInches').value);
-    const YrealFeet = parseNumberish(document.getElementById('scaleFeet').value);
-    if (!isFinite(XplanInches) || XplanInches <= 0 || !isFinite(YrealFeet) || YrealFeet <= 0) return NaN;
-    return YrealFeet / XplanInches; // feet per 1 inch on plan
-  }
-
-  // ---------- CONVERSIONS ----------
-  function convertPlanToReal() {
-    const planInches = parseNumberish(document.getElementById('planInches').value);
-    const fpi = getScaleFactorFeetPerInch();
-    const rounding = document.getElementById('rounding').value;
-    const out = document.getElementById('outPlanToReal');
-
-    if (!isFinite(planInches) || planInches < 0) {
-      out.textContent = "Please enter a valid plan inches value (e.g., 9/16, 1 13/16, 2.5).";
-      return;
-    }
-    if (!isFinite(fpi)) {
-      out.textContent = "Please enter a valid scale (X inches on plan = Y feet in real life).";
-      return;
-    }
-    const realFeetDecimal = planInches * fpi;
-    const pretty = formatFeetInches(realFeetDecimal, rounding);
-    const inchesTotal = realFeetDecimal * 12;
-
-    out.textContent =
-`REAL SIZE
-• Feet & inches: ${pretty}
-• Decimal feet: ${realFeetDecimal.toFixed(4)} ft
-• Decimal inches: ${inchesTotal.toFixed(2)} in`;
-  }
-
-  function convertRealToPlan() {
-    const feet = parseNumberish(document.getElementById('realFeet').value);
-    const inches = parseNumberish(document.getElementById('realInches').value);
-    const fpi = getScaleFactorFeetPerInch();
-    const out = document.getElementById('outRealToPlan');
-
-    const feetVal = isFinite(feet) ? feet : 0;
-    const inchesVal = isFinite(inches) ? inches : 0;
-
-    if ((!isFinite(feetVal) || feetVal < 0) && (!isFinite(inchesVal) || inchesVal < 0)) {
-      out.textContent = "Please enter a real-world length in feet and/or inches.";
-      return;
-    }
-    if (!isFinite(fpi)) {
-      out.textContent = "Please enter a valid scale (X inches on plan = Y feet in real life).";
-      return;
-    }
-
-    const totalFeet = (feetVal >= 0 ? feetVal : 0) + (inchesVal >= 0 ? inchesVal : 0)/12;
-    const planInches = totalFeet / fpi;
-
-    out.textContent =
-`PLAN SIZE
-• Inches on plan: ${planInches.toFixed(3)} in
-• Inches as fraction (approx): ${toNearestFraction(planInches, 16)} in
-• Decimal feet on plan: ${(planInches/12).toFixed(4)} ft`;
-  }
-
   function toNearestFraction(inches, denom) {
     const whole = Math.trunc(inches);
     const frac = inches - whole;
@@ -288,7 +211,7 @@
     return `${whole} ${numR}/${denR}`;
   }
 
-  // ---------- UI HELPERS ----------
+  // ---------- 5) SCALE HELPERS ----------
   function setScaleInputsFromPreset() {
     const preset = document.getElementById('scalePreset').value;
     const inches = document.getElementById('scaleInches');
@@ -305,33 +228,76 @@
       feet.value = y.toString();
     }
   }
+  function getScaleFactorFeetPerInch() {
+    const X = parseNumberish(document.getElementById('scaleInches').value);
+    const Y = parseNumberish(document.getElementById('scaleFeet').value);
+    if (!isFinite(X) || X <= 0 || !isFinite(Y) || Y <= 0) return NaN;
+    return Y / X; // feet per 1" on plan
+  }
 
+  // ---------- 6) CONVERSIONS ----------
+  function convertPlanToReal() {
+    const planInches = parseNumberish(document.getElementById('planInches').value);
+    const fpi = getScaleFactorFeetPerInch();
+    const rounding = document.getElementById('rounding').value;
+    const out = document.getElementById('outPlanToReal');
+
+    if (!isFinite(planInches) || planInches < 0) { out.textContent = "Please enter a valid plan inches value."; return; }
+    if (!isFinite(fpi)) { out.textContent = "Please enter a valid scale."; return; }
+
+    const realFeetDecimal = planInches * fpi;
+    const pretty = formatFeetInches(realFeetDecimal, rounding);
+    const inchesTotal = realFeetDecimal * 12;
+
+    out.textContent =
+`REAL SIZE
+• Feet & inches: ${pretty}
+• Decimal feet: ${realFeetDecimal.toFixed(4)} ft
+• Decimal inches: ${inchesTotal.toFixed(2)} in`;
+  }
+  function convertRealToPlan() {
+    const feet = parseNumberish(document.getElementById('realFeet').value);
+    const inches = parseNumberish(document.getElementById('realInches').value);
+    const fpi = getScaleFactorFeetPerInch();
+    const out = document.getElementById('outRealToPlan');
+
+    const feetVal = isFinite(feet) ? feet : 0;
+    const inchesVal = isFinite(inches) ? inches : 0;
+
+    if ((!isFinite(feetVal) || feetVal < 0) && (!isFinite(inchesVal) || inchesVal < 0)) {
+      out.textContent = "Please enter a real-world length in feet and/or inches."; return;
+    }
+    if (!isFinite(fpi)) { out.textContent = "Please enter a valid scale."; return; }
+
+    const totalFeet = (feetVal >= 0 ? feetVal : 0) + (inchesVal >= 0 ? inchesVal : 0)/12;
+    const planInches = totalFeet / fpi;
+
+    out.textContent =
+`PLAN SIZE
+• Inches on plan: ${planInches.toFixed(3)} in
+• Inches as fraction (approx): ${toNearestFraction(planInches, 16)} in
+• Decimal feet on plan: ${(planInches/12).toFixed(4)} ft`;
+  }
+
+  // ---------- 7) PAYWALL ----------
   function applyPaywall() {
-    const entitled = isEntitled();
     const preset = document.getElementById('scalePreset');
     const inches = document.getElementById('scaleInches');
     const feet = document.getElementById('scaleFeet');
     const proHint = document.getElementById('proHint');
     const unlockBtn = document.getElementById('unlockBtn');
-    const PAYMENT_LINK_URL=https://buy.stripe.com/8x26oJd5r9tNgjA9PHejK00;
 
-    if (!entitled) {
-      preset.value = "0.25,1";
+    if (!isEntitled()) {
+      preset.value = "0.25,1"; // lock to free scale
       setScaleInputsFromPreset();
-      inches.disabled = true;
-      feet.disabled = true;
+      inches.disabled = true; feet.disabled = true;
       proHint.style.display = "block";
       unlockBtn.onclick = () => {
-        if (PAYMENT_LINK_URL.startsWith("http")) {
-          window.location.href = PAYMENT_LINK_URL;
-        } else {
-          alert("Payment is not configured yet.");
-        }
+        if (PAYMENT_LINK_URL.startsWith("http")) window.location.href = PAYMENT_LINK_URL;
+        else alert("Payment is not configured yet.");
       };
     } else {
-      inches.disabled = false;
-      feet.disabled = false;
-      proHint.style.display = "none";
+      inches.disabled = false; feet.disabled = false; proHint.style.display = "none";
     }
 
     preset.onchange = () => {
@@ -342,28 +308,24 @@
         }
         setScaleInputsFromPreset();
       } else {
-        if (preset.value === "custom") {
-          inches.disabled = false;
-          feet.disabled = false;
-        } else {
-          inches.disabled = false;
-          feet.disabled = false;
-          setScaleInputsFromPreset();
-        }
+        if (preset.value === "custom") { inches.disabled = false; feet.disabled = false; }
+        else { inches.disabled = false; feet.disabled = false; setScaleInputsFromPreset(); }
       }
     };
   }
 
-  function fillExample() {
-    document.getElementById('scalePreset').value = "0.25,1";
-    setScaleInputsFromPreset();
-    document.getElementById('planInches').value = "9/16";
-    document.getElementById('rounding').value = "1/16";
-    convertPlanToReal();
-  }
-
+  // ---------- 8) WIRE BUTTONS ----------
   document.addEventListener('DOMContentLoaded', () => {
     applyPaywall();
+    document.getElementById('btnPlanToReal').addEventListener('click', convertPlanToReal);
+    document.getElementById('btnExample').addEventListener('click', () => {
+      document.getElementById('scalePreset').value = "0.25,1";
+      setScaleInputsFromPreset();
+      document.getElementById('planInches').value = "9/16";
+      document.getElementById('rounding').value = "1/16";
+      convertPlanToReal();
+    });
+    document.getElementById('btnRealToPlan').addEventListener('click', convertRealToPlan);
   });
 </script>
 </body>
