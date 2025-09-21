@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Thanks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 2rem; }
+  </style>
+</head>
+<body>
+  <h2>Thanks for your purchase!</h2>
+  <p>Finalizing your unlock…</p>
+  <script>
+    // Change this to your real Vercel app URL
+    const API_BASE = "https://YOUR-VERCEL-APP.vercel.app";
+
+    (async function () {
+      try {
+        const params = new URLSearchParams(location.search);
+        const sid = params.get("session_id");
+        if (!sid) {
+          document.body.insertAdjacentHTML('beforeend', "<p>Missing session id.</p>");
+          return;
+        }
+
+        const r = await fetch(`${API_BASE}/api/confirm?session_id=${encodeURIComponent(sid)}`);
+        const data = await r.json();
+
+        if (data.token) {
+          localStorage.setItem("entitlement", data.token); // save JWT locally
+          location.href = "index.html"; // go back to the app
+        } else {
+          document.body.insertAdjacentHTML('beforeend', `<p>Could not confirm: ${data.error || 'Unknown error'}</p>`);
+        }
+      } catch (e) {
+        document.body.insertAdjacentHTML('beforeend', `<p>Error: ${e.message}</p>`);
+      }
+    })();
+  </script>
+</body>
+</html>
