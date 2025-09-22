@@ -1,1 +1,9 @@
-
+{
+  "name": "blueprint-scale-app",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "stripe": "^16.0.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
