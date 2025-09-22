@@ -62,7 +62,7 @@
               <input id="scaleFeet" placeholder="e.g., 1" value="1" />
             </div>
           </div>
-
+  // ---------- 1) STRIPE PAYMENT LINK ----------
           <div class="locknote" id="proHint">
             Only <b>1/4″ = 1′</b> is available in the free version.
             <a id="unlockBtn"
@@ -135,7 +135,7 @@
 
 <script>
   // ---------- 1) STRIPE PAYMENT LINK ----------
-  const PAYMENT_LINK_URL = "https://buy.stripe.com/test_8x26oJd5r9tNgjA9PHejK00"; // <-- PUT YOUR STRIPE PAYMENT LINK HERE
+
 
   // ---------- 2) ENTITLEMENT ----------
   function isEntitled() { try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
