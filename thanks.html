@@ -9,34 +9,69 @@
   </style>
 </head>
 <body>
-  <h2>Thanks for your purchase!</h2>
-  <p>Finalizing your unlock…</p>
-  <script>
-    // Change this to your real Vercel app URL
-    const API_BASE = "https://blueprint-scale-calculator.vercel.app";
+<h2>Thank you for your purchase!</h2>
+<p>Your Pro unlock is complete on this device.</p>
 
-    (async function () {
-      try {
-        const params = new URLSearchParams(location.search);
-        const sid = params.get("session_id");
-        if (!sid) {
-          document.body.insertAdjacentHTML('beforeend', "<p>Missing session id.</p>");
-          return;
-        }
+<hr>
 
-        const r = await fetch(`${API_BASE}/api/confirm?session_id=${encodeURIComponent(sid)}`);
-        const data = await r.json();
+<h3>Save your Restore Code</h3>
+<p>
+  Keep this code safe. If you ever clear your browser or switch devices,
+  you can restore Pro by entering your email and this code in the app.
+</p>
 
-        if (data.token) {
-          localStorage.setItem("entitlement", data.token); // save JWT locally
-          location.href = "index.html"; // go back to the app
-        } else {
-          document.body.insertAdjacentHTML('beforeend', `<p>Could not confirm: ${data.error || 'Unknown error'}</p>`);
-        }
-      } catch (e) {
-        document.body.insertAdjacentHTML('beforeend', `<p>Error: ${e.message}</p>`);
-      }
-    })();
+<p>
+  <strong>Restore Code:</strong>
+  <code id="rc" style="font-size:1.2em;color:#0b6bff"></code>
+  <button onclick="navigator.clipboard.writeText(document.getElementById('rc').textContent)">
+    Copy
+  </button>
+</p>
+
+<details>
+  <summary>Advanced: Full unlock token</summary>
+  <textarea id="tok" style="width:100%;height:5em;margin-top:0.5em" readonly></textarea>
+  <button onclick="navigator.clipboard.writeText(document.getElementById('tok').value)">Copy token</button>
+</details>
+
+<p>
+  <a id="mailto" href="#">Email this to me</a>
+</p>
+
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+  if (!sessionId) return;
+
+  try {
+    const r = await fetch("https://blueprint-scale-calculator.vercel.app/api/confirm?session_id=" + sessionId);
+    const data = await r.json();
+    if (data.token) {
+      // Save token locally (unlocks immediately)
+      localStorage.setItem("entitlement", data.token);
+
+      // Fill in Restore Code + Token
+      document.getElementById("rc").textContent = data.code || "";
+      document.getElementById("tok").value = data.token || "";
+
+      // Pre-fill mailto link
+      const body =
+        "Restore Code: " + (data.code || "") +
+        "\n\nToken:\n" + (data.token || "");
+      document.getElementById("mailto").href =
+        "mailto:" + (data.email || "") +
+        "?subject=" + encodeURIComponent("Your Pro Unlock Code") +
+        "&body=" + encodeURIComponent(body);
+    } else {
+      document.body.innerHTML = "<p>Could not confirm your purchase.</p>";
+    }
+  } catch (e) {
+    document.body.innerHTML = "<p>Error: " + e.message + "</p>";
+  }
+})();
+</script>
+
   </script>
 </body>
 </html>
