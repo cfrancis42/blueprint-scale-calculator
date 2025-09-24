@@ -337,37 +337,31 @@
   
 <div id="restore" style="margin-top:1rem;border-top:1px solid #ddd;padding-top:0.75rem">
   <strong>Restore purchase</strong>
-  <p style="margin:0.5rem 0">Enter the email you used at checkout and the code we emailed you:</p>
-  <input id="restoreEmail" type="email" placeholder="Email" style="width:260px;max-width:80%">
-  <input id="restoreCode" type="text" placeholder="Restore Code (e.g., 1A2B3C4D5E6F)" style="width:260px;max-width:80%;margin-left:6px">
+  <p style="margin:0.5rem 0">
+    If you saved your unlock token from the thank-you page, paste it here to restore Pro on this device.
+  </p>
+  <input id="restoreToken" type="text" placeholder="Paste unlock token (starts with eyJ…)" style="width:90%;max-width:560px">
   <button id="restoreBtn">Restore</button>
   <div id="restoreMsg" style="margin-top:6px;color:#444"></div>
 </div>
 
-
-document.getElementById('restoreBtn').addEventListener('click', async () => {
-  const email = document.getElementById('restoreEmail').value.trim();
-  const code  = document.getElementById('restoreCode').value.trim().toUpperCase();
-  const msg   = document.getElementById('restoreMsg');
-  msg.textContent = "Checking…";
-  try {
-    const r = await fetch("https://blueprint-scale-calculator.vercel.app//api/redeem", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code })
-    });
-    const data = await r.json();
-    if (data.token) {
-      localStorage.setItem("entitlement", data.token);
+<script>
+  document.getElementById('restoreBtn').addEventListener('click', () => {
+    const tok = document.getElementById('restoreToken').value.trim();
+    const msg = document.getElementById('restoreMsg');
+    if (!tok) { msg.textContent = "Please paste your token."; return; }
+    // very light check: JWTs commonly start with "eyJ"
+    if (!tok.startsWith("eyJ")) { msg.textContent = "That doesn't look like a valid token."; return; }
+    try {
+      localStorage.setItem("entitlement", tok);
       msg.textContent = "Success! Pro is unlocked on this device.";
       location.reload();
-    } else {
-      msg.textContent = data.error || "Could not restore.";
+    } catch (e) {
+      msg.textContent = "Could not save token: " + e.message;
     }
-  } catch (e) {
-    msg.textContent = e.message;
-  }
-});
+  });
+</script>
+
 </script>
 
   
