@@ -351,7 +351,7 @@ document.getElementById('restoreBtn').addEventListener('click', async () => {
   const msg   = document.getElementById('restoreMsg');
   msg.textContent = "Checking…";
   try {
-    const r = await fetch("https://YOUR-VERCEL-APP.vercel.app/api/redeem", {
+    const r = await fetch("https://blueprint-scale-calculator.vercel.app//api/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code })
