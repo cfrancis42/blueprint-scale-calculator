@@ -336,23 +336,26 @@ function applyPaywall() {
   };
 }
   // ---------- 8) WIRE BUTTONS ----------
-  document.addEventListener('DOMContentLoaded', () => {
-    applyPaywall();
-    document.getElementById('btnPlanToReal').addEventListener('click', convertPlanToReal);
-    document.getElementById('btnExample').addEventListener('click', () => {
-      document.getElementById('scalePreset').value = "0.25,1";
-      setScaleInputsFromPreset();
-      document.getElementById('planInches').value = "9/16";
-      document.getElementById('rounding').value = "1/16";
-      convertPlanToReal();
-    });
-    document.getElementById('btnRealToPlan').addEventListener('click', convertRealToPlan);
+document.addEventListener('DOMContentLoaded', () => {
+  applyPaywall();
+
+  document.getElementById('btnPlanToReal').addEventListener('click', convertPlanToReal);
+
+  document.getElementById('btnExample').addEventListener('click', () => {
+    document.getElementById('scalePreset').value = "0.25,1";
+    setScaleInputsFromPreset();
+    document.getElementById('planInches').value = "9/16";
+    document.getElementById('rounding').value = "1/16";
+    convertPlanToReal();
   });
+
+  document.getElementById('btnRealToPlan').addEventListener('click', convertRealToPlan);
+
+  // 🔽 move this inside
   document.getElementById('restoreBtn').addEventListener('click', () => {
     const tok = document.getElementById('restoreToken').value.trim();
     const msg = document.getElementById('restoreMsg');
     if (!tok) { msg.textContent = "Please paste your token."; return; }
-    // very light check: JWTs commonly start with "eyJ"
     if (!tok.startsWith("eyJ")) { msg.textContent = "That doesn't look like a valid token."; return; }
     try {
       localStorage.setItem("entitlement", tok);
@@ -362,6 +365,7 @@ function applyPaywall() {
       msg.textContent = "Could not save token: " + e.message;
     }
   });
+});
 
 </script>  
 <div id="restore" style="margin-top:1rem;border-top:1px solid #ddd;padding-top:0.75rem">
