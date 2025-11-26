@@ -348,19 +348,6 @@ function applyPaywall() {
     });
     document.getElementById('btnRealToPlan').addEventListener('click', convertRealToPlan);
   });
-
-</script>  
-<div id="restore" style="margin-top:1rem;border-top:1px solid #ddd;padding-top:0.75rem">
-  <strong>Restore purchase</strong>
-  <p style="margin:0.5rem 0">
-    If you saved your unlock token from the thank-you page, paste it here to restore Pro on this device.
-  </p>
-  <input id="restoreToken" type="text" placeholder="Paste unlock token (starts with eyJ…)" style="width:90%;max-width:560px">
-  <button id="restoreBtn">Restore</button>
-  <div id="restoreMsg" style="margin-top:6px;color:#444"></div>
-</div>
-
-
   document.getElementById('restoreBtn').addEventListener('click', () => {
     const tok = document.getElementById('restoreToken').value.trim();
     const msg = document.getElementById('restoreMsg');
@@ -376,8 +363,20 @@ function applyPaywall() {
     }
   });
 
+</script>  
+<div id="restore" style="margin-top:1rem;border-top:1px solid #ddd;padding-top:0.75rem">
+  <strong>Restore purchase</strong>
+  <p style="margin:0.5rem 0">
+    If you saved your unlock token from the thank-you page, paste it here to restore Pro on this device.
+  </p>
+  <input id="restoreToken" type="text" placeholder="Paste unlock token (starts with eyJ…)" style="width:90%;max-width:560px">
+  <button id="restoreBtn">Restore</button>
+  <div id="restoreMsg" style="margin-top:6px;color:#444"></div>
+</div>
 
-</script>
+
+
+
 
   
   
