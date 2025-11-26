@@ -139,7 +139,7 @@
 
 const DISABLE_PAYWALL = true
   // ---------- 2) ENTITLEMENT ----------
-  function isEntitled() { if{DISABLE_PAYWALL) return true; try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
+  function isEntitled() { if (DISABLE_PAYWALL) return true; try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
   function setEntitled(token) { try { localStorage.setItem("entitlement", token); } catch {} }
 
   // ---------- 3) PARSER (fixed regex) ----------
