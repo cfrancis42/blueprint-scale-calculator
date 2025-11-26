@@ -137,9 +137,9 @@
 <script>
   // ---------- 1) STRIPE PAYMENT LINK ----------
 
-
+const DISABLE_PAYWALL = true
   // ---------- 2) ENTITLEMENT ----------
-  function isEntitled() { try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
+  function isEntitled() { if{DISABLE_PAYWALL) return true; try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
   function setEntitled(token) { try { localStorage.setItem("entitlement", token); } catch {} }
 
   // ---------- 3) PARSER (fixed regex) ----------
@@ -286,40 +286,55 @@
   }
 
   // ---------- 7) PAYWALL ----------
-  function applyPaywall() {
-    const preset = document.getElementById('scalePreset');
-    const inches = document.getElementById('scaleInches');
-    const feet = document.getElementById('scaleFeet');
-    const proHint = document.getElementById('proHint');
-    const unlockBtn = document.getElementById('unlockBtn');
 
-    if (!isEntitled()) {
-      preset.value = "0.25,1"; // lock to free scale
-      setScaleInputsFromPreset();
-      inches.disabled = true; feet.disabled = true;
-      proHint.style.display = "block";
-      unlockBtn.onclick = () => {
-        if (PAYMENT_LINK_URL.startsWith("http")) window.location.href = PAYMENT_LINK_URL;
-        else alert("Payment is not configured yet.");
-      };
-    } else {
-      inches.disabled = false; feet.disabled = false; proHint.style.display = "none";
-    }
+function applyPaywall() {
+  const preset = document.getElementById('scalePreset');
+  const inches = document.getElementById('scaleInches');
+  const feet = document.getElementById('scaleFeet');
+  const proHint = document.getElementById('proHint');
 
-    preset.onchange = () => {
-      if (!isEntitled()) {
-        if (preset.value !== "0.25,1" && preset.value !== "custom") {
-          alert("This scale is part of Pro. Unlock all scales to use it.");
-          preset.value = "0.25,1";
-        }
-        setScaleInputsFromPreset();
-      } else {
-        if (preset.value === "custom") { inches.disabled = false; feet.disabled = false; }
-        else { inches.disabled = false; feet.disabled = false; setScaleInputsFromPreset(); }
-      }
-    };
+  // If paywall is disabled, everything is just open
+  if (DISABLE_PAYWALL) {
+    inches.disabled = false;
+    feet.disabled = false;
+    proHint.style.display = "none";  // hide "Unlock" message
+    setScaleInputsFromPreset();      // keep dropdown + fields in sync
+    preset.onchange = () => setScaleInputsFromPreset();
+    return;
   }
 
+  // Normal paywall behavior (when DISABLE_PAYWALL = false)
+  if (!isEntitled()) {
+    preset.value = "0.25,1"; // lock to free scale
+    setScaleInputsFromPreset();
+    inches.disabled = true; 
+    feet.disabled = true;
+    proHint.style.display = "block";
+  } else {
+    inches.disabled = false; 
+    feet.disabled = false; 
+    proHint.style.display = "none";
+  }
+
+  preset.onchange = () => {
+    if (!isEntitled()) {
+      if (preset.value !== "0.25,1" && preset.value !== "custom") {
+        alert("This scale is part of Pro. Unlock all scales to use it.");
+        preset.value = "0.25,1";
+      }
+      setScaleInputsFromPreset();
+    } else {
+      if (preset.value === "custom") {
+        inches.disabled = false; 
+        feet.disabled = false;
+      } else {
+        inches.disabled = false; 
+        feet.disabled = false; 
+        setScaleInputsFromPreset();
+      }
+    }
+  };
+}
   // ---------- 8) WIRE BUTTONS ----------
   document.addEventListener('DOMContentLoaded', () => {
     applyPaywall();
@@ -345,7 +360,7 @@
   <div id="restoreMsg" style="margin-top:6px;color:#444"></div>
 </div>
 
-<script>
+
   document.getElementById('restoreBtn').addEventListener('click', () => {
     const tok = document.getElementById('restoreToken').value.trim();
     const msg = document.getElementById('restoreMsg');
@@ -360,7 +375,7 @@
       msg.textContent = "Could not save token: " + e.message;
     }
   });
-</script>
+
 
 </script>
 
