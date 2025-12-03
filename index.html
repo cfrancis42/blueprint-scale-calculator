@@ -161,20 +161,23 @@
 
 
 <script>
-  // ---------- 1) STRIPE PAYMENT LINK ----------
+  const DISABLE_PAYWALL = true;
 
-const DISABLE_PAYWALL = true
-  // ---------- 2) ENTITLEMENT ----------
-  function isEntitled() { if (DISABLE_PAYWALL) return true; try { return !!localStorage.getItem("entitlement"); } catch { return false; } }
-  function setEntitled(token) { try { localStorage.setItem("entitlement", token); } catch {} }
+  // ---------- ENTITLEMENT ----------
+  function isEntitled() {
+    if (DISABLE_PAYWALL) return true;
+    try { return !!localStorage.getItem("entitlement"); } catch { return false; }
+  }
+  function setEntitled(token) {
+    try { localStorage.setItem("entitlement", token); } catch {}
+  }
 
-  // ---------- 3) PARSER (fixed regex) ----------
+  // ---------- PARSER ----------
   function parseNumberish(str) {
     if (!str) return NaN;
     str = (''+str).trim();
     if (!str) return NaN;
 
-    // Mixed fraction: "1 13/16"
     const mixed = str.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
     if (mixed) {
       const whole = parseFloat(mixed[1]);
@@ -183,7 +186,7 @@ const DISABLE_PAYWALL = true
       if (!den) return NaN;
       return whole + (whole < 0 ? -num/den : num/den);
     }
-    // Simple fraction: "13/16"
+
     const frac = str.match(/^(-?\d+)\/(\d+)$/);
     if (frac) {
       const num = parseFloat(frac[1]);
@@ -191,12 +194,12 @@ const DISABLE_PAYWALL = true
       if (!den) return NaN;
       return num/den;
     }
-    // Decimal/whole
+
     const val = parseFloat(str);
     return isNaN(val) ? NaN : val;
   }
 
-  // ---------- 4) ROUNDING & FORMATTING ----------
+  // ---------- ROUNDING & FORMATTING ----------
   function roundToFractionInches(inches, fracStr) {
     if (!fracStr || fracStr === "1") return Math.round(inches);
     const parts = fracStr.split('/');
@@ -206,6 +209,7 @@ const DISABLE_PAYWALL = true
     const step = 1/denom;
     return Math.round(inches/step)*step;
   }
+
   function formatFeetInches(feetDecimal, rounding) {
     if (!isFinite(feetDecimal)) return "—";
     let feet = Math.trunc(feetDecimal);
@@ -224,6 +228,7 @@ const DISABLE_PAYWALL = true
       const g = gcd(num, den) || 1;
       return {whole, num: num/g, den: den/g};
     }
+
     const f = toFraction(inches, rounding);
     let inchStr = "";
     if (Math.abs(f.num) < 1e-9) inchStr = `${Math.round(inches)}″`;
@@ -231,6 +236,7 @@ const DISABLE_PAYWALL = true
     else inchStr = `${f.num}/${f.den}″`;
     return `${feet}′-${inchStr}`;
   }
+
   function toNearestFraction(inches, denom) {
     const whole = Math.trunc(inches);
     const frac = inches - whole;
@@ -243,13 +249,13 @@ const DISABLE_PAYWALL = true
     return `${whole} ${numR}/${denR}`;
   }
 
-  // ---------- 5) SCALE HELPERS ----------
+  // ---------- SCALE HELPERS ----------
   function setScaleInputsFromPreset() {
-    const preset = document.getElementById('scalePreset').value;
+    const presetVal = document.getElementById('scalePreset').value;
     const inches = document.getElementById('scaleInches');
     const feet = document.getElementById('scaleFeet');
-    if (preset === "custom") return;
-    const [x, y] = preset.split(',').map(Number);
+    if (presetVal === "custom") return;
+    const [x, y] = presetVal.split(',').map(Number);
     if (!isNaN(x) && !isNaN(y)) {
       inches.value = x === 0.25 ? "1/4" :
                      x === 0.125 ? "1/8" :
@@ -260,6 +266,7 @@ const DISABLE_PAYWALL = true
       feet.value = y.toString();
     }
   }
+
   function getScaleFactorFeetPerInch() {
     const X = parseNumberish(document.getElementById('scaleInches').value);
     const Y = parseNumberish(document.getElementById('scaleFeet').value);
@@ -267,15 +274,21 @@ const DISABLE_PAYWALL = true
     return Y / X; // feet per 1" on plan
   }
 
-  // ---------- 6) CONVERSIONS ----------
+  // ---------- CONVERSIONS ----------
   function convertPlanToReal() {
     const planInches = parseNumberish(document.getElementById('planInches').value);
     const fpi = getScaleFactorFeetPerInch();
     const rounding = document.getElementById('rounding').value;
     const out = document.getElementById('outPlanToReal');
 
-    if (!isFinite(planInches) || planInches < 0) { out.textContent = "Please enter a valid plan inches value."; return; }
-    if (!isFinite(fpi)) { out.textContent = "Please enter a valid scale."; return; }
+    if (!isFinite(planInches) || planInches < 0) {
+      out.textContent = "Please enter a valid plan inches value."; 
+      return;
+    }
+    if (!isFinite(fpi)) {
+      out.textContent = "Please enter a valid scale."; 
+      return;
+    }
 
     const realFeetDecimal = planInches * fpi;
     const pretty = formatFeetInches(realFeetDecimal, rounding);
@@ -287,6 +300,7 @@ const DISABLE_PAYWALL = true
 • Decimal feet: ${realFeetDecimal.toFixed(4)} ft
 • Decimal inches: ${inchesTotal.toFixed(2)} in`;
   }
+
   function convertRealToPlan() {
     const feet = parseNumberish(document.getElementById('realFeet').value);
     const inches = parseNumberish(document.getElementById('realInches').value);
@@ -297,9 +311,13 @@ const DISABLE_PAYWALL = true
     const inchesVal = isFinite(inches) ? inches : 0;
 
     if ((!isFinite(feetVal) || feetVal < 0) && (!isFinite(inchesVal) || inchesVal < 0)) {
-      out.textContent = "Please enter a real-world length in feet and/or inches."; return;
+      out.textContent = "Please enter a real-world length in feet and/or inches."; 
+      return;
     }
-    if (!isFinite(fpi)) { out.textContent = "Please enter a valid scale."; return; }
+    if (!isFinite(fpi)) {
+      out.textContent = "Please enter a valid scale."; 
+      return;
+    }
 
     const totalFeet = (feetVal >= 0 ? feetVal : 0) + (inchesVal >= 0 ? inchesVal : 0)/12;
     const planInches = totalFeet / fpi;
@@ -311,89 +329,81 @@ const DISABLE_PAYWALL = true
 • Decimal feet on plan: ${(planInches/12).toFixed(4)} ft`;
   }
 
-  // ---------- 7) PAYWALL ----------
+  // ---------- PAYWALL (disabled for now) ----------
+  function applyPaywall() {
+    const proHint = document.getElementById('proHint');
 
-function applyPaywall() {
-  const preset = document.getElementById('scalePreset');
-  const inches = document.getElementById('scaleInches');
-  const feet = document.getElementById('scaleFeet');
-  const proHint = document.getElementById('proHint');
+    if (DISABLE_PAYWALL) {
+      // Hide the "Unlock all scales" message since everything is free right now
+      if (proHint) proHint.style.display = "none";
+      return;
+    }
 
-  // If paywall is disabled, everything is just open
-  if (DISABLE_PAYWALL) {
-    inches.disabled = false;
-    feet.disabled = false;
-    proHint.style.display = "none";  // hide "Unlock" message
-    setScaleInputsFromPreset();      // keep dropdown + fields in sync
-    preset.onchange = () => setScaleInputsFromPreset();
-    return;
+    // (If you ever set DISABLE_PAYWALL = false, we can re-enable the old paywall logic here)
   }
 
-  // Normal paywall behavior (when DISABLE_PAYWALL = false)
-  if (!isEntitled()) {
-    preset.value = "0.25,1"; // lock to free scale
-    setScaleInputsFromPreset();
-    inches.disabled = true; 
-    feet.disabled = true;
-    proHint.style.display = "block";
-  } else {
-    inches.disabled = false; 
-    feet.disabled = false; 
-    proHint.style.display = "none";
-  }
+  // ---------- WIRE BUTTONS & LOCK SCALE INPUTS ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    applyPaywall();
 
-  preset.onchange = () => {
-    if (!isEntitled()) {
-      if (preset.value !== "0.25,1" && preset.value !== "custom") {
-        alert("This scale is part of Pro. Unlock all scales to use it.");
-        preset.value = "0.25,1";
-      }
-      setScaleInputsFromPreset();
-    } else {
+    const preset = document.getElementById('scalePreset');
+    const inches = document.getElementById('scaleInches');
+    const feet   = document.getElementById('scaleFeet');
+
+    // Lock scale inputs unless "Custom" is selected
+    function updateScaleLocking() {
       if (preset.value === "custom") {
-        inches.disabled = false; 
-        feet.disabled = false;
+        inches.disabled = false;
+        feet.disabled   = false;
       } else {
-        inches.disabled = false; 
-        feet.disabled = false; 
-        setScaleInputsFromPreset();
+        inches.disabled = true;
+        feet.disabled   = true;
       }
     }
-  };
-}
-  // ---------- 8) WIRE BUTTONS ----------
-document.addEventListener('DOMContentLoaded', () => {
-  applyPaywall();
 
-  document.getElementById('btnPlanToReal').addEventListener('click', convertPlanToReal);
-
-  document.getElementById('btnExample').addEventListener('click', () => {
-    document.getElementById('scalePreset').value = "0.25,1";
+    // Initial sync from preset -> inputs, then lock appropriately
     setScaleInputsFromPreset();
-    document.getElementById('planInches').value = "9/16";
-    document.getElementById('rounding').value = "1/16";
-    convertPlanToReal();
-  });
+    updateScaleLocking();
 
-  document.getElementById('btnRealToPlan').addEventListener('click', convertRealToPlan);
+    // When user changes preset, update values and lock state
+    preset.addEventListener('change', () => {
+      setScaleInputsFromPreset();
+      updateScaleLocking();
+    });
 
-  // 🔽 move this inside
-  document.getElementById('restoreBtn').addEventListener('click', () => {
-    const tok = document.getElementById('restoreToken').value.trim();
-    const msg = document.getElementById('restoreMsg');
-    if (!tok) { msg.textContent = "Please paste your token."; return; }
-    if (!tok.startsWith("eyJ")) { msg.textContent = "That doesn't look like a valid token."; return; }
-    try {
-      localStorage.setItem("entitlement", tok);
-      msg.textContent = "Success! Pro is unlocked on this device.";
-      location.reload();
-    } catch (e) {
-      msg.textContent = "Could not save token: " + e.message;
+    // Buttons
+    document.getElementById('btnPlanToReal').addEventListener('click', convertPlanToReal);
+
+    document.getElementById('btnExample').addEventListener('click', () => {
+      document.getElementById('scalePreset').value = "0.25,1";
+      setScaleInputsFromPreset();
+      document.getElementById('planInches').value = "9/16";
+      document.getElementById('rounding').value = "1/16";
+      convertPlanToReal();
+    });
+
+    document.getElementById('btnRealToPlan').addEventListener('click', convertRealToPlan);
+
+    // Restore (hidden for now, but keep safe)
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', () => {
+        const tok = document.getElementById('restoreToken').value.trim();
+        const msg = document.getElementById('restoreMsg');
+        if (!tok) { msg.textContent = "Please paste your token."; return; }
+        if (!tok.startsWith("eyJ")) { msg.textContent = "That doesn't look like a valid token."; return; }
+        try {
+          localStorage.setItem("entitlement", tok);
+          msg.textContent = "Success! Pro is unlocked on this device.";
+          location.reload();
+        } catch (e) {
+          msg.textContent = "Could not save token: " + e.message;
+        }
+      });
     }
   });
-});
+</script>
 
-</script>  
 <style>
   #restore { display: none; }
 </style>
