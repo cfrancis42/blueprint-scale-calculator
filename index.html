@@ -5,27 +5,237 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Blueprint Scale Calculator</title>
 <meta name="theme-color" content="#0b6bff" />
-<style>
-  :root { --pad: 14px; --radius: 12px; }
-  * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
-  body { margin: 0; background: #f7f7f9; color: #111; }
-  header { padding: 24px; text-align: center; }
-  h1 { margin: 0 0 6px; font-size: 1.6rem; }
-  p.sub { margin: 0; color: #555; font-size: 0.95rem; }
-  .wrap { max-width: 900px; margin: 0 auto; padding: 12px 16px 32px; }
-  .card { background: #fff; border-radius: var(--radius); padding: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin-bottom: 14px; }
-  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-  label { display: block; font-weight: 600; margin-bottom: 6px; }
-  input, select, button { width: 100%; padding: 10px 12px; border: 1px solid #d5d7df; border-radius: 10px; background: #fff; font-size: 1rem; }
-  input:focus, select:focus { outline: 2px solid #7aa8ff; border-color: #7aa8ff; }
-  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
-  button.primary { background: #0b6bff; color: white; border: none; }
-  button.secondary { background: #eef3ff; color: #0b3bbb; border: 1px solid #bcd0ff; }
-  .output { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; background: #0b1020; color: #e8f0ff; border-radius: 12px; padding: 12px; white-space: pre-wrap; }
-  .hint { color: #666; font-size: 0.9rem; }
-  .footer { text-align: center; color: #666; font-size: 0.9rem; padding-top: 12px; }
-  .locknote { margin-top:8px; font-size:0.95rem; }
-  .locknote b { color:#0b3bbb; }
+  <style>
+  :root {
+    --pad: 14px;
+    --radius: 14px;
+    --accent: #0b6bff;
+    --accent-soft: #eef3ff;
+    --bg: #f3f5fb;
+    --card-bg: #ffffff;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --border-subtle: #e2e4f0;
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top left, #e4ecff 0, #f7f7fb 38%, #edf3ff 100%);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 24px 16px 8px;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(1.6rem, 2.1vw, 1.9rem);
+    letter-spacing: 0.02em;
+  }
+
+  p.sub {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  p.sub b {
+    color: var(--accent);
+  }
+
+  .wrap {
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 16px 32px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+    margin-bottom: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    transform: translateY(0);
+    transition: box-shadow 0.18s ease-out, transform 0.18s ease-out, border-color 0.18s ease-out;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
+    border-color: rgba(191, 219, 254, 0.9);
+  }
+
+  .card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+  }
+
+  .grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5d7df;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.98rem;
+    transition: border-color 0.16s ease-out, box-shadow 0.16s ease-out, transform 0.08s ease-out, background-color 0.16s ease-out;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.6);
+  }
+
+  .btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button.primary {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.26);
+  }
+
+  button.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.32);
+  }
+
+  button.primary:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+  }
+
+  button.secondary {
+    background: var(--accent-soft);
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    font-weight: 500;
+  }
+
+  button.secondary:hover {
+    background: #e0ebff;
+  }
+
+  .output {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono";
+    background: #020617;
+    color: #e5e7eb;
+    border-radius: 12px;
+    padding: 11px 12px;
+    white-space: pre-wrap;
+    font-size: 0.93rem;
+    line-height: 1.4;
+    border: 1px solid #1f2937;
+  }
+
+  .hint {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding-top: 4px;
+  }
+
+  .locknote {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    padding: 8px 10px;
+    border-radius: 9px;
+    background: #f9fafb;
+    border: 1px dashed #e5e7eb;
+  }
+
+  .locknote b {
+    color: #1d4ed8;
+  }
+
+  .locknote a {
+    margin-top: 6px;
+    display: inline-block;
+    padding: 8px 11px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+    transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background-color 0.12s ease-out;
+  }
+
+  .locknote a:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.35);
+    background-color: #0a5ae6;
+  }
+
+  .locknote a:active {
+    transform: translateY(0);
+    box-shadow: 0 7px 16px rgba(37, 99, 235, 0.28);
+  }
+
+  .card h4 {
+    margin: 0 0 4px;
+    font-size: 0.96rem;
+  }
+
+  ol {
+    padding-left: 20px;
+    margin-top: 2px;
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 600px) {
+    header {
+      padding-top: 18px;
+    }
+    .card {
+      padding: 16px 14px 14px;
+      border-radius: 12px;
+    }
+  }
 </style>
 </head>
 <body>
